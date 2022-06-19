@@ -139,7 +139,7 @@ class App {
     this.#mapEvent = mapE;
     form.classList.remove('hidden');
     inputDistance.focus();
-    console.log('noice');
+    console.log('noie');
   }
   _hideForm() {
     inputDistance.value =
