@@ -254,8 +254,8 @@ class App {
       <span class="workout__value">${workout.cadence}</span>
       <span class="workout__unit">spm</span>
     </div>
-    <button class="edit">Edit</button>
-     <button class="delete">Delete</button>
+    <button class="edit running--outline">Edit</button>
+     <button class="delete running--outline">Delete</button>
   </li>`;
     }
     if (workout.type === 'cycling') {
@@ -270,8 +270,8 @@ class App {
       <span class="workout__value">${workout.elevationGain}</span>
       <span class="workout__unit">m</span>
     </div>
-    <button class="edit">Edit</button>
-    <button class="delete">Delete</button>
+    <button class="edit cycling--outline">Edit</button>
+    <button class="delete cycling--outline">Delete</button>
   </li>
     `;
     }
@@ -303,6 +303,10 @@ class App {
   _editDescritption(e) {
     const first = e.target.closest('.workout');
     const h1 = first.querySelector('.workout__title');
+    console.log(first);
+    if (first.classList.contains('workout--cycling')) {
+      document.querySelector('.edit').style.border = 'solid orange';
+    }
     if (h1.classList.contains('edited')) {
       h1.setAttribute('contenteditable', 'true');
       var setpos = document.createRange();
@@ -335,7 +339,7 @@ class App {
       // console.log(first);
       //to find the clicked one
       const obj = this.#workouts.find(obj => obj.id === first.dataset.id);
-      // console.log(nice);
+
       //to change internally in object
       obj.description = h1.textContent;
       //to save it in local storage

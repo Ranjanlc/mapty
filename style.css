@@ -236,7 +236,6 @@ a:visited {
   border-radius: 5px;
   border-width: 2px;
   color: white;
- 
 }
 .sort {
   width: 60px;
@@ -245,20 +244,28 @@ a:visited {
   padding: 2px;
   color: white;
   border-radius: 5px;
+  margin-top: 5px;
+  margin-bottom: 5px;
 }
-.edit:hover{
-  background-color: #00c46a;
+.edit:hover {
+  background-color: #08adee;
   color: white;
   border: solid #111;
   text-shadow: snow 12px;
 }
-.delete:hover{
-  background-color: #ff4d4d;
+.delete:hover {
+  background-color: #e50909;
 
   color: white;
   border: solid #111;
   text-shadow: snow 12px;
 }
-.sort:hover{
-  background-color: #222;
+.sort:hover {
+  background-color: #08adee;
+}
+.running--outline {
+  border: solid var(--color-brand--2);
+}
+.cycling--outline {
+  border: solid var(--color-brand--1);
 }
