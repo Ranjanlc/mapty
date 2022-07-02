@@ -412,7 +412,7 @@ class App {
     console.log(data.length);
     if (data.length === 0) return;
     // To remove message if data is already there.
-    document.querySelector('.guide--message').remove();
+    document.querySelector('.guide--message')?.remove();
     this.#workouts = data;
     this.#workouts.forEach(work => {
       this._renderWorkout(work);
