@@ -91,7 +91,7 @@ class App {
   _renderGuideMessage() {
     containerWorkouts.insertAdjacentHTML(
       'afterbegin',
-      '<div class="guide--message">Tap on map to enter your workout</div>    '
+      '<div class="guide--message">Tap on any place where you want to workout</div>    '
     );
   }
   _sort(e) {
