@@ -8,6 +8,8 @@ const inputDuration = document.querySelector('.form__input--duration');
 const inputCadence = document.querySelector('.form__input--cadence');
 const inputElevation = document.querySelector('.form__input--elevation');
 const btnSort = document.querySelector('.sort');
+let userPosition;
+
 class Workout {
   //Public field,they are not official part of js language
   date = new Date();
@@ -74,7 +76,7 @@ class App {
     //GEt users position
     this._getPosition();
     //It is located in constructor because we want these Event Listener to be active since the beginnin
-
+    this._renderGuideMessage;
     //Get data from local storage
     this._getLocalStorage();
 
@@ -85,6 +87,12 @@ class App {
     inputType.addEventListener('change', this._toggleElevationField.bind(this));
     containerWorkouts.addEventListener('click', this._moveToPopup.bind(this)); // We do this so that our event listeners are initiated at the beginning
     btnSort.addEventListener('click', this._sort.bind(this));
+  }
+  _renderGuideMessage() {
+    containerWorkouts.insertAdjacentHTML(
+      'afterbegin',
+      '<div class="guide--message">Tap on map to enter your workout</div>    '
+    );
   }
   _sort(e) {
     document
@@ -105,13 +113,17 @@ class App {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         this._loadMap.bind(this), // To prevent this keyword in loadMap becoming undefined,this keyword here represents the object thats calling whic we also want inside -loadMap
+        //THis function runs because geolocation.getCurrentposition takes two fn,one executes in case of success ,other in error
         function () {
+          containerWorkouts.style.opacity = 0;
           alert('Could not get your co ordinate');
         }
       );
     }
   }
   _loadMap(position) {
+    // To set userposition for later uses for loading map after editing and deleting
+    userPosition = position;
     const { latitude } = position.coords;
     const { longitude } = position.coords;
 
@@ -136,6 +148,8 @@ class App {
   }
 
   _showForm(mapE) {
+    // FOr guide message at start
+    document.querySelector('.guide--message')?.remove();
     this.#mapEvent = mapE;
     form.classList.remove('hidden');
     inputDistance.focus();
@@ -289,14 +303,30 @@ class App {
     const list = e.target.closest('.workout');
     // console.log(e.target.closest('.workout').remove());
     const nice = this.#workouts.findIndex(cur => cur.id === list.dataset.id);
+
     this.#workouts.splice(nice, 1);
-    // console.log(nice);
-    // console.log(this.#workouts);
-    list.remove();
+    // For transition
+    list.classList.add('removed');
+    list.addEventListener('transitionend', function () {
+      console.log('ended');
+      list.remove();
+    });
     this._setLocalStorage();
-    // this._renderWorkoutMarker(this.#workouts);
-    // console.log(obj);
-    window.location.reload();
+    // console.log(...this.#workouts);
+
+    if (this.#workouts.length === 0) {
+      this.#map.remove();
+      this._loadMap(userPosition);
+      this._renderGuideMessage();
+    }
+    // To remove in each iteration and if there is only last obj,above code is executed coz it loads map with userPosition which we found at start.
+    this.#workouts?.forEach(workout => {
+      this.#map.remove();
+      this._loadMap({
+        coords: { latitude: workout.coords[0], longitude: workout.coords[1] },
+      });
+      this._renderWorkoutMarker(workout);
+    });
   }
 
   //Edit forms' list
@@ -344,10 +374,13 @@ class App {
       obj.description = h1.textContent;
       //to save it in local storage
       this._setLocalStorage();
-      window.location.reload();
-      // this._renderWorkoutMarker(obj);
-      // console.log(workout);
-      // console.log(h1.textContent);
+      console.log(obj);
+      //This was to reload map without explicitly reloading whole webpage
+      this.#map.remove();
+      //To load map in the position of list which was edited.
+      this._loadMap({
+        coords: { latitude: obj.coords[0], longitude: obj.coords[1] },
+      });
     }
   }
   _moveToPopup(e) {
@@ -376,8 +409,10 @@ class App {
   }
   _getLocalStorage() {
     const data = JSON.parse(localStorage.getItem('workouts'));
-    // console.log(data);
-    if (!data) return;
+    console.log(data.length);
+    if (data.length === 0) return;
+    // To remove message if data is already there.
+    document.querySelector('.guide--message').remove();
     this.#workouts = data;
     this.#workouts.forEach(work => {
       this._renderWorkout(work);
