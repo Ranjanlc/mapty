@@ -76,7 +76,7 @@ class App {
     //GEt users position
     this._getPosition();
     //It is located in constructor because we want these Event Listener to be active since the beginnin
-    this._renderGuideMessage;
+    this._renderGuideMessage();
     //Get data from local storage
     this._getLocalStorage();
 
@@ -121,9 +121,12 @@ class App {
       );
     }
   }
-  _loadMap(position) {
+  _loadMap(position, reEvaluating = false) {
     // To set userposition for later uses for loading map after editing and deleting
-    userPosition = position;
+    if (!reEvaluating) {
+      // We did this coz we are calling loadMap when deleting entered list,too.So,to avoid losing our userPosition,we did this check.
+      userPosition = position;
+    }
     const { latitude } = position.coords;
     const { longitude } = position.coords;
 
@@ -305,26 +308,37 @@ class App {
     const nice = this.#workouts.findIndex(cur => cur.id === list.dataset.id);
 
     this.#workouts.splice(nice, 1);
+    function transitionEndFn() {
+      console.log('ended', this);
+      list.remove();
+      if (this.#workouts.length === 0) {
+        this.#map.remove();
+        console.log(userPosition);
+        this._loadMap(userPosition);
+        this._renderGuideMessage();
+      }
+    }
     // For transition
     list.classList.add('removed');
-    list.addEventListener('transitionend', function () {
-      console.log('ended');
-      list.remove();
-    });
+    list.addEventListener('transitionend', transitionEndFn.bind(this));
     this._setLocalStorage();
     // console.log(...this.#workouts);
 
-    if (this.#workouts.length === 0) {
-      this.#map.remove();
-      this._loadMap(userPosition);
-      this._renderGuideMessage();
-    }
+    // if (this.#workouts.length === 0) {
+    //   this.#map.remove();
+    //   this._loadMap(userPosition);
+    //   this._renderGuideMessage();
+    // }
     // To remove in each iteration and if there is only last obj,above code is executed coz it loads map with userPosition which we found at start.
     this.#workouts?.forEach(workout => {
       this.#map.remove();
-      this._loadMap({
-        coords: { latitude: workout.coords[0], longitude: workout.coords[1] },
-      });
+      console.log(workout);
+      this._loadMap(
+        {
+          coords: { latitude: workout.coords[0], longitude: workout.coords[1] },
+        },
+        true
+      );
       this._renderWorkoutMarker(workout);
     });
   }
