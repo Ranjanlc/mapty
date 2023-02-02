@@ -91,7 +91,7 @@ class App {
   _renderGuideMessage() {
     containerWorkouts.insertAdjacentHTML(
       'afterbegin',
-      '<div class="guide--message">Tap on any place where you want to workout</div>    '
+      '<div class="guide--message">Tap on map to enter your workout</div>    '
     );
   }
   _sort(e) {
@@ -100,11 +100,11 @@ class App {
       .querySelectorAll('.workout')
       .forEach(list => list.remove());
 
+    console.log(this.#workouts);
     this.#workouts.sort((a, b) => {
       if (a.distance > b.distance) return 1;
       if (b.distance > a.distance) return -1;
     });
-    console.log(this.#workouts);
     this.#workouts.forEach(obj => this._renderWorkout(obj));
     this._setLocalStorage();
   }
@@ -121,12 +121,9 @@ class App {
       );
     }
   }
-  _loadMap(position, reEvaluating = false) {
+  _loadMap(position) {
     // To set userposition for later uses for loading map after editing and deleting
-    if (!reEvaluating) {
-      // We did this coz we are calling loadMap when deleting entered list,too.So,to avoid losing our userPosition,we did this check.
-      userPosition = position;
-    }
+    userPosition = position;
     const { latitude } = position.coords;
     const { longitude } = position.coords;
 
@@ -145,7 +142,7 @@ class App {
     );
     //It comes with a parameter called position parameter
 
-    this.#workouts.forEach(work => {
+    this.#workouts?.forEach(work => {
       this._renderWorkoutMarker(work);
     });
   }
@@ -184,7 +181,7 @@ class App {
     const duration = +inputDuration.value;
     const { lat, lng } = this.#mapEvent.latlng;
     let workout; //to make it available to outside
-
+    // console.log(type, distance, duration, lat, lng);
     //if  workout running,create running object
     if (type === 'running') {
       const cadence = +inputCadence.value;
@@ -207,7 +204,7 @@ class App {
         return alert('inputs have to be positive numbers');
       workout = new Cycling([lat, lng], distance, duration, elevation);
     }
-
+    console.log(this);
     //Add new object to workout array
     this.#workouts.push(workout);
     // console.log(this.#workouts);
@@ -308,37 +305,26 @@ class App {
     const nice = this.#workouts.findIndex(cur => cur.id === list.dataset.id);
 
     this.#workouts.splice(nice, 1);
-    function transitionEndFn() {
-      console.log('ended', this);
-      list.remove();
-      if (this.#workouts.length === 0) {
-        this.#map.remove();
-        console.log(userPosition);
-        this._loadMap(userPosition);
-        this._renderGuideMessage();
-      }
-    }
     // For transition
     list.classList.add('removed');
-    list.addEventListener('transitionend', transitionEndFn.bind(this));
+    list.addEventListener('transitionend', function () {
+      console.log('ended');
+      list.remove();
+    });
     this._setLocalStorage();
     // console.log(...this.#workouts);
 
-    // if (this.#workouts.length === 0) {
-    //   this.#map.remove();
-    //   this._loadMap(userPosition);
-    //   this._renderGuideMessage();
-    // }
+    if (this.#workouts.length === 0) {
+      this.#map.remove();
+      this._loadMap(userPosition);
+      this._renderGuideMessage();
+    }
     // To remove in each iteration and if there is only last obj,above code is executed coz it loads map with userPosition which we found at start.
     this.#workouts?.forEach(workout => {
       this.#map.remove();
-      console.log(workout);
-      this._loadMap(
-        {
-          coords: { latitude: workout.coords[0], longitude: workout.coords[1] },
-        },
-        true
-      );
+      this._loadMap({
+        coords: { latitude: workout.coords[0], longitude: workout.coords[1] },
+      });
       this._renderWorkoutMarker(workout);
     });
   }
@@ -423,12 +409,12 @@ class App {
   }
   _getLocalStorage() {
     const data = JSON.parse(localStorage.getItem('workouts'));
-    console.log(data.length);
-    if (data.length === 0) return;
+    // console.log(data.length);
+    if (data?.length === 0) return;
     // To remove message if data is already there.
     document.querySelector('.guide--message')?.remove();
-    this.#workouts = data;
-    this.#workouts.forEach(work => {
+    this.#workouts = data || [];
+    this.#workouts?.forEach(work => {
       this._renderWorkout(work);
     });
   }
